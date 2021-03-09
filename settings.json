@@ -1,0 +1,15 @@
+{
+    "ConnectDB": {
+        "DB": "",
+        "dbname": "",
+        "user": "",
+        "password": "",
+        "host": "",
+        "port": 0
+    },
+    "CreateTable": {},
+    "Logger": {
+        "level": "",
+        "path": ""
+    }
+}
