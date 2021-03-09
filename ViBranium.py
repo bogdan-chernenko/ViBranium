@@ -642,10 +642,3 @@ else:
         else:
             raise SysArgError(f"Not found arg -> {i}")
 
-
-
-Cursor = ConnectDB("PostgreSQl", "test", "postgres", "root", "127.0.0.1", 5432)
-print(Cursor.select(1, "all", "*", "table1"))
-
-Cursor.insert("table1", "id, name, password", "4, 'test', 'test'")
-print(Cursor.select(1, "all", "*", "table1"))
