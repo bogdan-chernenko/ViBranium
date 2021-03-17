@@ -347,40 +347,28 @@ class Encrypt:
 
 class CreateTable:
     """
-        str_request: must be list and like as -> ['name_BIGINT', 'login_TEXT']
-
         it's SQL-request, and you need follow all SQL-rules 
 
             CREATE TABLE IF NOT EXISTS {table_name} {str_request}
 
-
-            CreateTable('users', ['name_BIGINT', 'login_TEXT'])
+            CreateTable("users", ['name', 'login'], ['BIGINT', 'TEXT'])
     """
-    def __init__(self, table_name: str, str_request: list, cursor = None, db = None, DB = None):
+    def __init__(self, table_name: str, columns_name: list, columns_type, cursor = None, db = None, DB = None):
+        """
+            age INT,
+            name TEXT
+        """
         self.DB = DB
+        self.output_datas = []
 
-        if self.DB == "PostgreSQl":
-            self.sql_request = """
-            CREATE TABLE IF NOT EXISTS {} {}
-            """.format(table_name, str_request)
-            self.sql_request = self.sql_request.replace("['", "(")
-            self.sql_request = self.sql_request.replace("']", ")")
-            self.sql_request = self.sql_request.replace("'", "")
-            self.sql_request = self.sql_request.replace("_", " ")
+        for elem, name in enumerate(columns_name):
+            self.output_datas.append(f"{name} {columns_type[elem]}")
 
-            cursor.execute(self.sql_request)
-            db.commit()
+        self.sql_request = """
+            CREATE TABLE IF NOT EXISTS {} ({})
+            """.format(table_name, ", ".join(self.output_datas))
 
-
-        elif self.DB == "SQlite3":
-            self.sql_request = """CREATE TABLE IF NOT EXISTS {} {}
-            """.format(table_name, str_request)
-
-            self.sql_request = self.sql_request.replace("['", "(")
-            self.sql_request = self.sql_request.replace("']", ")")
-            self.sql_request = self.sql_request.replace("'", "")
-            self.sql_request = self.sql_request.replace("_", " ")
-
+        if ((self.DB == "PostgreSQl") or (self.DB == "SQlite3")):
             cursor.execute(self.sql_request)
             db.commit()
 
@@ -435,11 +423,11 @@ class ConnectDB:
             self.cursor = self.db.cursor()
 
 
-    def create(self, table_name: str, str_request: list):
+    def create(self, table_name: str, columns_name: list, columns_type: list):
         if self.DB == "PostgreSQl":
-            CreateTable(table_name, str_request, self.cursor, self.db, self.DB)
+            CreateTable(table_name, columns_name, columns_type, self.cursor, self.db, self.DB)
         elif self.DB == "SQlite3":
-            CreateTable(table_name, str_request, self.cursor, self.db, self.DB)
+            CreateTable(table_name, columns_name, columns_type, self.cursor, self.db, self.DB)
 
     def select(self, mode = 1, fetch = 'one', search_data = '*', table_name = None, each_column = None, char = '=', by_ = None):
         """
@@ -461,31 +449,7 @@ class ConnectDB:
                 .select(mode = 2, fetch = "one", search_data = '*', table_name = 'users', each_column = 'id', char = '!=', by_ = '7')
                 .select(2, "one", '*', 'users', 'id', '!=', '7')
         """
-        if self.DB == "PostgreSQl":
-            if mode == 1:
-                if fetch == "one":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name}")
-                    return self.cursor.fetchone()
-                elif fetch == "all":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name}")
-                    return self.cursor.fetchall()
-                else:
-                    raise NotFoundMode(f"arg fetch have some mistakes: fetch must be 'one' or 'all' not {fetch}")
-
-            elif mode == 2:
-                if fetch == "one":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name} WHERE {each_column} {char} {by_}")
-                    return self.cursor.fetchone()
-                elif fetch == "all":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name} WHERE {each_column} {char} {by_}")
-                    return self.cursor.fetchall()
-                else:
-                    raise NotFoundMode(f"arg fetch have some mistakes: fetch must be 'one' or 'all' not {fetch}")
-            else:
-                raise NotFoundMode(f"arg mode have some mistakes: mode must be 1: int or 2: int not {mode}")
-
-
-        elif self.DB == "SQlite3":
+        if ((self.DB == "PostgreSQl") or (self.DB == "SQlite3")):
             if mode == 1:
                 if fetch == "one":
                     self.cursor.execute(f"SELECT {search_data} FROM {table_name}")
@@ -509,14 +473,7 @@ class ConnectDB:
                 raise NotFoundMode(f"arg mode have some mistakes: mode must be 1: int or 2: int not {mode}")
 
     def delete(self, table_name, each_column = None, char = '=', by_ = None):
-        if self.DB == "PostgreSQl":
-            self.delete_request = """DELETE FROM {} WHERE {} {} {}""".format(
-                table_name, each_column,
-                char, by_
-                )
-            self.cursor.execute(self.delete_request)
-            self.db.commit()
-        elif self.DB == "SQlite3":
+        if ((self.DB == "PostgreSQl") or (self.DB == "SQlite3")):
             self.delete_request = """DELETE FROM {} WHERE {} {} {}""".format(
                 table_name, each_column,
                 char, by_
@@ -550,18 +507,14 @@ class ConnectDB:
             self.db.commit()
 
         elif self.DB == "SQlite3":
-            dich = "?,"*len(columns_datas)
-            dich = dich[0:len(dich) -1]
+            dich = "?," * len(columns_datas.split(","))
+            dich = dich[0 : len(dich) -1]
 
-            self.cursor.execute("""INSERT INTO {} (
-                {}
-                )
-                VALUES({})""".format(
+            self.cursor.execute("""INSERT INTO {} VALUES({})""".format(
                     table_name,
-                    columns_name,
                     dich
                     ),
-                    columns_datas
+                    columns_datas.replace(" ", "").split(",")
             )
             self.db.commit()
 
