@@ -6,17 +6,20 @@ cursor = ConnectDB("SQlite3", "test.db")
 
 cursor.create("table3", ['name', 'login'], ['BIGINT', 'TEXT'])
 
-print(cursor.select(1, "all", "*", "table3"))
+print(cursor.select("all", "*", "table3"))
 
 cursor.insert("table3", "name, 'login'", "123, 'test'")
 cursor.insert("table3", "name, login", "321, 'test2'")
 
-print(cursor.select(1, "all", "*", "table3"))
+print(cursor.select("all", "*", "table3"))
 
 cursor.update("table3", "name", "321", "name", "=", "123")
 
-print(cursor.select(1, "all", "*", "table3"))
+print(cursor.select("all", "*", "table3"))
 
 cursor.delete("table3", "name", "!=", "1")
 
-print(cursor.select(1, "all", "*", "table3"))
+cursor.close()
+cursor.connect()
+
+print(cursor.select("all", "*", "table3"))

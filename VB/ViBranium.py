@@ -1,7 +1,6 @@
 __package__ = __name__
 __all__ = [
-    "Helper", "Logger", "Encrypt",
-    "CreateTable", "ConnectDB"
+    "Helper", "Logger", "ConnectDB"
     ]
 __version__ = "1.0.1"
 __author__ = "M_O_D_E_R"
@@ -26,9 +25,6 @@ import os
 
 FILE_PATH = os.path.abspath(__file__)
 BASE_PATH = "\\".join(FILE_PATH.replace("\\", "/").split("/")[0 : -1])
-
-
-
 
 
 #def do_beauti(self, datas, columns):
@@ -89,9 +85,6 @@ class Helper:
 
 
         All class for working with databases:
-            Encrypt:
-                this class can help with encode and decode data before writing in db
-
             CreateTable:
                 for creating new tables
 
@@ -101,7 +94,6 @@ class Helper:
     ----------------------------------------------------------------------------------
     """
     def __init__(self): pass
-
 
 
 class Logger:
@@ -131,7 +123,6 @@ class Logger:
     
     def set_formatter(self, str_formatter):
         return logging.Formatter(str_formatter)
-
     
     def set_level(self):
         if self.log_level == "info":
@@ -146,7 +137,6 @@ class Logger:
             return logging.CRITICAL
         else:
             raise LogLevelError(f"Не верный уровень логирования ->  {self.log_level}")
-
 
 
 class NotFoundMode(Exception):
@@ -164,213 +154,9 @@ class LogLevelError(Exception):
     def __init__(self, info_error):
         self.info_error = info_error
 
-
-
-
-
-class Encrypt:
-    """
-        Here you can use hash-function for encrypt some data and then put data in database.
-
-
-        Also class contain method for cheking some data with some hash,
-        method return True if some hash == hash some data,
-        False will be returned if some hash != hash some data.
-        
-        Example:
-            >>> print(Encrypt.is_true("Hello world", b'>%\x96\ny\xdb\xc6\x9bgL\xd4\xecg\xa7,b'))
-            >>> True
-
-            >>> print(Encrypt.hash("Hello world"))
-            >>> b'>%\x96\ny\xdb\xc6\x9bgL\xd4\xecg\xa7,b'
-
-
-        Methods for encode and decode some informations:
-            def encode(self) -> str: ...
-            def decode(self) -> str: ...
-    """
-    def __init__(self): pass
-
-    def turn_(self, string, num_of_turn         ):
-        all_chars = "abcdefghijklmnopqrstuvwxyz 123456789!@#$%^&*()_+}{[]:;'|/,.<>?"
-        string = str(string).lower()
-        output_num_lst = []
-        lst = []
-        lenght = (len((all_chars) * 2) - 1)
-
-
-        if num_of_turn > 123:
-            new_range = num_of_turn // lenght
-            
-            formula = 0
-            for i in range(new_range):
-                formula += lenght
-            
-            new_encode_int = num_of_turn - formula
-
-            for i in string:
-                output_num_lst.append(all_chars.index((i)))
-
-            for i in output_num_lst:
-                if i + new_encode_int <= (len(all_chars) - 1):
-                    lst.append(all_chars[i + new_encode_int])
-                else:
-                    new_num = i + new_encode_int - (len(all_chars) - 1) - 1
-
-                    lst.append(all_chars[new_num])
-
-            return "".join(lst)
-        else:            
-            for i in string:
-                output_num_lst.append(all_chars.index((i)))
-
-            for i in output_num_lst:
-                if i + num_of_turn <= (len(all_chars) - 1):
-                    lst.append(all_chars[i + num_of_turn])
-                else:
-                    new_num = i + num_of_turn - (len(all_chars) - 1) - 1
-
-                    lst.append(all_chars[new_num])
-            
-            return "".join(lst)
-
-    def encode(self, input_string, key):
-        key = key.lower()
-        input_string_copy = input_string
-        chars = {
-            'a' : 1, 'b' : 2, 'c' : 3, 'd' : 4, 'e' : 5, 'f' : 6, 'g' : 7, 'h' : 8,
-            'i' : 9, 'j' : 10, 'k' : 11, 'l' : 12, 'm' : 13, 'n' : 14, 'o' : 15, 'p' : 16,
-            'q' : 17, 'r' : 18, 's' : 19, 't' : 20, 'u' : 21, 'v' : 22, 'w' : 23, 'x' : 24, 'y' : 25, 'z' : 26,
-            ' ' : 27
-        }
-        all_chars = "abcdefghijklmnopqrstuvwxyz 123456789!@#$%^&*()_+}{[]:;'|/,.<>?"
-        new_key = 0
-
-        for i in key:
-            new_key += chars.get(i)
-
-        new_list = []
-
-        input_string = list(input_string.lower())
-
-        for i in input_string:
-            new_list.append(chars.get(i))
-
-        lenght = (len((all_chars) * 2) - 1)
-        new_range = new_key // lenght    
-        formula = 0
-        for i in range(new_range):
-            formula += lenght
-        
-        new_encode_int = new_key - formula
-
-        returns_data = self.turn_(input_string_copy, new_key)
-        return [
-            returns_data, new_encode_int,
-            [
-                self.hash(returns_data),
-                self.hash(new_key)
-            ]
-        ]
-    
-    def decode(self, some_string, key):
-        new_range = key // 123
-
-        formula = 0
-        for i in range(new_range):
-            formula += 123
-
-
-        new_encode_int = key - formula
-        
-        return self.turn_(some_string, -new_encode_int)
-    
-    def crypto(self, string, key):
-        import math
-
-        string = string.lower()
-        chars = "abcdefghijklmnopqrstuvwxyz 123456789!@#$%^&*()_+}{[]:;'|/,.<>?"
-
-        encrypt = Encrypt()
-        new_string = encrypt.encode(string, key)
-
-        mas = []
-        for i in new_string[0]:
-            crypt = round((((math.pi*(chars.index(i) ** 2 % new_string[1])) + ((25 / math.pi) * (math.e ** 2)) + ((math.e ** math.pi) + (math.pi ** math.e)))) / (math.pi ** 2) * (math.e ** 2))
-            mas.append(chr(crypt))
-
-        return "".join(mas)
-
-    #@staticmethod
-    def hash(self, str_data: str):
-        str_data = str(str_data)
-        var = hashlib.md5()
-        var.update(str_data.encode("utf-8"))
-        return var.digest()
-
-    #@staticmethod
-    def is_true(self, try_data, hash_):
-        data_ = hashlib.md5()
-        data_.update(try_data.encode("utf-8"))
-        
-        if data_.digest() == hash_:
-            return True
-        else:
-            return False
-
-    def reverse_func(self, lst):
-        for i in lst:
-            lst = [i] + lst
-        
-        lst = lst[0 : len(lst) // 2]
-
-        return lst
-
-    def translate__from_2__to_10(self, num):
-        result = 0
-        num = str(num)
-
-        kw = [i for i in range(len(num))]
-        kw = self.reverse_func(kw)
-
-        for i in range(len(num)):
-            result += (int(num[i]) * (2 ** kw[i]))
-
-        return result
-
-
-
-
-
-
-
-
-class CreateTable:
-    """
-        it's SQL-request, and you need follow all SQL-rules 
-
-            CREATE TABLE IF NOT EXISTS {table_name} {str_request}
-
-            CreateTable("users", ['name', 'login'], ['BIGINT', 'TEXT'])
-    """
-    def __init__(self, table_name: str, columns_name: list, columns_type, cursor = None, db = None, DB = None):
-        """
-            age INT,
-            name TEXT
-        """
-        self.DB = DB
-        self.output_datas = []
-
-        for elem, name in enumerate(columns_name):
-            self.output_datas.append(f"{name} {columns_type[elem]}")
-
-        self.sql_request = """
-            CREATE TABLE IF NOT EXISTS {} ({})
-            """.format(table_name, ", ".join(self.output_datas))
-
-        if ((self.DB == "PostgreSQl") or (self.DB == "SQlite3")):
-            cursor.execute(self.sql_request)
-            db.commit()
+class DataBaseError(Exception):
+    def __init__(self, non_exist_db):
+        print("Data base is not exists: ", non_exist_db)
 
 
 class ConnectDB:
@@ -379,23 +165,39 @@ class ConnectDB:
     """
     def __init__(self, DB = " ", dbname =  " ", user = " ", password = " ", host = " ", port = 0):
         self.DB = DB
-        if self.DB == "PostgreSQl":
-            self.dbname = dbname
+        self.dbname = dbname
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
 
+        self.DB_exist = False
+
+        self.connect()
+
+    def connect(self):
+        if self.DB == "PostgreSQl":
             self.db = psycopg2.connect(
                 dbname = self.dbname,
-                user = user, 
-                password = password,
-                host = host,
-                port = port    
+                user = self.user, 
+                password = self.password,
+                host = self.host,
+                port = self.port    
             )
             self.cursor = self.db.cursor()
+            self.DB_exist = True
         elif self.DB == "SQlite3":
-            self.dbname = dbname
+            self.dbname = self.dbname
 
             self.db = sqlite3.connect(self.dbname)
             self.cursor = self.db.cursor()
-    
+            self.DB_exist = True
+        else:
+            raise DataBaseError(self.DB)
+
+    def close(self):
+        self.cursor.close()
+
     def use_json(self):
         import json
 
@@ -422,58 +224,40 @@ class ConnectDB:
             self.db = sqlite3.connect(self.dbname)
             self.cursor = self.db.cursor()
 
-
     def create(self, table_name: str, columns_name: list, columns_type: list):
-        if self.DB == "PostgreSQl":
-            CreateTable(table_name, columns_name, columns_type, self.cursor, self.db, self.DB)
-        elif self.DB == "SQlite3":
-            CreateTable(table_name, columns_name, columns_type, self.cursor, self.db, self.DB)
+        self.output_datas = []
 
-    def select(self, mode = 1, fetch = 'one', search_data = '*', table_name = None, each_column = None, char = '=', by_ = None):
-        """
-            for selecting some information from databases:
-                have 2 mode such as (
-                    1) SELECT {} FROM {}
-                    2) SELECT {} FROM {} WHERE {} {} {}
-                )
+        for elem, name in enumerate(columns_name):
+            self.output_datas.append(f"{name} {columns_type[elem]}")
 
-            SELECT {*} FROM {table} WHERE {user} {=} {123}
+        self.sql_request = """
+            CREATE TABLE IF NOT EXISTS {} ({})
+            """.format(table_name, ", ".join(self.output_datas))
 
+        if self.DB_exist:
+            self.cursor.execute(self.sql_request)
+            self.db.commit()
 
-            Example:
-
-                .select(mode = 1, fetch = "one", search_data = '*', table_name = 'users')
-                .select(mode = 1, fetch = "all", search_data = '*', table_name = 'users')
-                .select(1, "all", '*', 'users')
-
-                .select(mode = 2, fetch = "one", search_data = '*', table_name = 'users', each_column = 'id', char = '!=', by_ = '7')
-                .select(2, "one", '*', 'users', 'id', '!=', '7')
-        """
-        if ((self.DB == "PostgreSQl") or (self.DB == "SQlite3")):
-            if mode == 1:
+    def select(
+            self, fetch = 'one', search_data = '*', table_name = "",
+            each_column = None, char = '=', by_ = None
+        ):
+        if self.DB_exist:
+            if each_column is None:
+                self.cursor.execute(f"SELECT {search_data} FROM {table_name}")
                 if fetch == "one":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name}")
                     return self.cursor.fetchone()
                 elif fetch == "all":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name}")
                     return self.cursor.fetchall()
-                else:
-                    raise NotFoundMode(f"arg fetch have some mistakes: fetch must be 'one' or 'all' not {fetch}")
-
-            elif mode == 2:
-                if fetch == "one":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name} WHERE {each_column} {char} {by_}")
-                    return self.cursor.fetchone()
-                elif fetch == "all":
-                    self.cursor.execute(f"SELECT {search_data} FROM {table_name} WHERE {each_column} {char} {by_}")
-                    return self.cursor.fetchall()
-                else:
-                    raise NotFoundMode(f"arg fetch have some mistakes: fetch must be 'one' or 'all' not {fetch}")
             else:
-                raise NotFoundMode(f"arg mode have some mistakes: mode must be 1: int or 2: int not {mode}")
+                self.cursor.execute(f"SELECT {search_data} FROM {table_name} WHERE {each_column} {char} {by_}")
+                if fetch == "one":
+                    return self.cursor.fetchone()
+                elif fetch == "all":
+                    return self.cursor.fetchall()
 
     def delete(self, table_name, each_column = None, char = '=', by_ = None):
-        if ((self.DB == "PostgreSQl") or (self.DB == "SQlite3")):
+        if self.DB_exist:
             self.delete_request = """DELETE FROM {} WHERE {} {} {}""".format(
                 table_name, each_column,
                 char, by_
@@ -481,23 +265,14 @@ class ConnectDB:
             self.cursor.execute(self.delete_request)
             self.db.commit()
 
-
     def update(self, table_name, column_name, value, each_column = None, char = '=', by_ = None):
-        if self.DB == "PostgreSQl":
+        if self.DB_exist:
             self.update_request = """UPDATE {} SET {} = {} WHERE {} {} {}""".format(
                 table_name, column_name, value,
                 each_column, char, by_
                 )
             self.cursor.execute(self.update_request)
             self.db.commit()
-        elif self.DB == "SQlite3":
-            self.update_request = """UPDATE {} SET {} = {} WHERE {} {} {}""".format(
-                table_name, column_name, value,
-                each_column, char, by_
-                )
-            self.cursor.execute(self.update_request)
-            self.db.commit()
-
 
     def insert(self, table_name: str, columns_name: str, columns_datas):
         if self.DB == "PostgreSQl":
@@ -543,7 +318,6 @@ elif "settings" in sys_args:
         print("\tLogger: ")
         i_level = input("Level of logging >>> ")
         i_path = input("Path to log-file >>> ")
-
 
         with open("settings.json", "r") as file_R:
             data = json.load(file_R)
@@ -594,4 +368,3 @@ else:
             break
         else:
             raise SysArgError(f"Not found arg -> {i}")
-
